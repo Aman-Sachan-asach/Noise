@@ -8,6 +8,7 @@ uniform float num_octaves;
 
 float Noisehash(vec3 p)
 {
+  //simply returns a random-ish number in the range from 0 to 1
   p  = fract( p*0.3183099+0.1 );
   p *= 17.0;
   return fract( p.x*p.y*p.z*(p.x+p.y+p.z) );
@@ -15,6 +16,9 @@ float Noisehash(vec3 p)
 
 float smoothed_noise(vec3 p)
 {
+  //smooth between the point in questiona and the points that surround it in 3D space,
+  //weighing the surrounding points by proximity
+  //this results in smoother transitions in the noise field
   vec3 p1 = vec3(p.x - 1.0, p.y + 1.0,p.z + 1.0);
   vec3 p2 = vec3(p.x,       p.y + 1.0,p.z + 1.0);
   vec3 p3 = vec3(p.x + 1.0, p.y + 1.0,p.z + 1.0);
@@ -85,25 +89,9 @@ float smoothed_noise(vec3 p)
   return average;
 }
 
-float noise3D_linear(vec3 x)
-{
-    //uses linear blending through the mix function
-    vec3 p = floor(x);
-    vec3 f = fract(x);
-    f = f*f*(3.0-2.0*f);
-
-    return mix(mix(mix( Noisehash(p+vec3(0,0,0)),
-                        Noisehash(p+vec3(1,0,0)),f.x),
-                   mix( Noisehash(p+vec3(0,1,0)),
-                        Noisehash(p+vec3(1,1,0)),f.x),f.y),
-               mix(mix( Noisehash(p+vec3(0,0,1)),
-                        Noisehash(p+vec3(1,0,1)),f.x),
-                   mix( Noisehash(p+vec3(0,1,1)),
-                        Noisehash(p+vec3(1,1,1)),f.x),f.y),f.z);
-}
-
 float Cosine_Interpolate(float a, float b, float t)
 {
+  //cosine interpolation --> smoother than linear but not as expensive as cubic interpolation
   // a --- the lower bound value of interpolation
   // b --- the upper bound value of interpolation
 
@@ -115,6 +103,7 @@ float Cosine_Interpolate(float a, float b, float t)
 
 float Noise3D_cosine(vec3 p)
 {
+  //noise function that uses the noise hash, smoothing and interpolation
   float x = p.x;
   float y = p.y;
   float z = p.z;
@@ -127,15 +116,6 @@ float Noise3D_cosine(vec3 p)
   vec3 p6 = vec3(ceil(x),  floor(y), ceil(z));
   vec3 p7 = vec3(ceil(x),  ceil(y),  floor(z));
   vec3 p8 = vec3(ceil(x),  ceil(y),  ceil(z));
-
-  // float v1 = Noisehash (p1);
-  // float v2 = Noisehash (p2);
-  // float v3 = Noisehash (p3);
-  // float v4 = Noisehash (p4);
-  // float v5 = Noisehash (p5);
-  // float v6 = Noisehash (p6);
-  // float v7 = Noisehash (p7);
-  // float v8 = Noisehash (p8);
 
   float v1 = smoothed_noise(p1);
   float v2 = smoothed_noise(p2);
@@ -161,6 +141,7 @@ float Noise3D_cosine(vec3 p)
 
 float Noise3D(vec3 p)
 {
+  //noise function that uses multiple octaves of noise for complexity in the resultant noise
   float total = 0.0;
   //float persistence = 0.8;
 
@@ -183,7 +164,7 @@ float Noise3D(vec3 p)
 void main()
 {
     new_uv = uv + uv_offset;
-
+    //loop around with the UV co-ordinates
     if(new_uv.x > 1.0)
     {
       new_uv.x -= 1.0;
@@ -191,15 +172,6 @@ void main()
     if(new_uv.y > 1.0)
     {
       new_uv.y -= 1.0;
-    }
-
-    if(new_uv.x > 0.95)
-    {
-      new_uv.x = 0.95;
-    }
-    if(new_uv.y > 0.95)
-    {
-      new_uv.y = 0.95;
     }
 
     vnor = normal;

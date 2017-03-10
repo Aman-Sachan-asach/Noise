@@ -1,13 +1,9 @@
-
 const THREE = require('three'); // older modules are imported like this. You shouldn't have to worry about this much
 import Framework from './framework'
 
-var d_orig = new Date();
-var d2 = d_orig.getSeconds();
-var d3 = d_orig.getSeconds();
 var count = 0.0;
-var flag = false;
 
+//settings contains gui variables and things that will be passed to the shader to change the noise generated
 var settings = {
     strength: 3.0,
     colors: 1.0,
@@ -19,20 +15,18 @@ var settings = {
 
 var color_Material = new THREE.ShaderMaterial({
   uniforms: {
-    image1: { // Check the Three.JS documentation for the different allowed types and values
+    // Check the Three.JS documentation for the different allowed types and values
+    image1: {
       type: "t",
       value: THREE.ImageUtils.loadTexture('./red_r.png')
-      //value: THREE.ImageUtils.loadTexture('./blue gradient.png')
     },
-    image2: { // Check the Three.JS documentation for the different allowed types and values
+    image2: {
       type: "t",
       value: THREE.ImageUtils.loadTexture('./blue_gradient.jpg')
-      //value: THREE.ImageUtils.loadTexture('./blue gradient.png')
     },
-    image3: { // Check the Three.JS documentation for the different allowed types and values
+    image3: {
       type: "t",
       value: THREE.ImageUtils.loadTexture('./adam.jpg')
-      //value: THREE.ImageUtils.loadTexture('./blue gradient.png')
     },
     time: {
       type: "f",
@@ -72,38 +66,6 @@ function onLoad(framework)
   var gui = framework.gui;
   var stats = framework.stats;
 
-  // LOOK: the line below is synyatic sugar for the code above. Optional, but I sort of recommend it.
-  // var {scene, camera, renderer, gui, stats} = framework;
-
-  // // initialize a simple box and material
-  var box = new THREE.BoxGeometry(1, 1, 1);
-  var adamMaterial = new THREE.ShaderMaterial({
-    uniforms: {
-      image: { // Check the Three.JS documentation for the different allowed types and values
-        type: "t",
-        value: THREE.ImageUtils.loadTexture('./adam.jpg')
-      }
-    },
-    vertexShader: require('./shaders/adam-vert.glsl'),
-    fragmentShader: require('./shaders/adam-frag.glsl')
-  });
-  var adamCube = new THREE.Mesh(box, adamMaterial);
-
-  // // instantiate a loader
-  // var loader = new THREE.JSONLoader();
-  //
-  // // load a resource
-  // loader.load(
-  // 	// resource URL
-  // 	'./cow.json',
-  // 	// Function when resource is loaded
-  // 	function ( geometry, materials ) {
-  // 		//var material = new THREE.MultiMaterial( color_Material );
-  // 		var cow_object = new THREE.Mesh( geometry, color_Material );
-  // 		scene.add( cow_object );
-  // 	}
-  // );
-
   var sphereGeom = new THREE.IcosahedronGeometry(0.2, 5);
   var sphere = new THREE.Mesh( sphereGeom, color_Material );
 
@@ -114,8 +76,7 @@ function onLoad(framework)
   //scene.add(adamCube);
   scene.add( sphere );
 
-  // edit params and listen to changes like this
-  // more information here: https://workshop.chromeexperiments.com/examples/gui/#1--Basic-Usage
+  // gui variables
   gui.add(camera, 'fov', 0, 180).onChange(function(newVal)
   {
     camera.updateProjectionMatrix();
@@ -145,6 +106,7 @@ function onLoad(framework)
 // called on frame updates
 function onUpdate(framework)
 {
+  //add a UV offset to get a moving texture around the noise deformed surface
   settings.uv_x += 0.01;
   settings.uv_y += 0.01;
 
@@ -159,7 +121,6 @@ function onUpdate(framework)
 
   count++;
   color_Material.uniforms.uv_offset.value = new THREE.Vector2(settings.uv_x, settings.uv_y);
-  //console.log(color_Material.uniforms.uv_offset.value);
   color_Material.uniforms.persistence.value = settings.persistence;
   color_Material.uniforms.num_octaves.value = settings.num_octaves;
   color_Material.uniforms.flag_color.value = settings.colors;
